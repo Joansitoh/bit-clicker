@@ -47,7 +47,6 @@
 
 ![BitClicker screenshot 1](/resources/screenshot1.png)
 ![BitClicker screenshot 2](/resources/screenshot2.png)
-![BitClicker screenshot 3](/resources/screenshot3.png)
 
 ---
 
