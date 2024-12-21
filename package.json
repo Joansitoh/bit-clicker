@@ -1,0 +1,62 @@
+{
+  "name": "bit-clicker",
+  "version": "1.0.2",
+  "description": "Modern and simple auto clicker",
+  "main": "./out/main/index.js",
+  "author": "joan.programas@gmail.com",
+  "homepage": "https://joancabrera.info",
+  "scripts": {
+    "format": "prettier --write .",
+    "lint": "eslint . --ext .js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix",
+    "start": "electron-vite preview",
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "postinstall": "electron-builder install-app-deps",
+    "build:unpack": "npm run build && electron-builder --dir",
+    "build:win": "npm run build && electron-builder --win",
+    "build:mac": "npm run build && electron-builder --mac",
+    "build:linux": "npm run build && electron-builder --linux"
+  },
+  "build": {
+    "appId": "com.joansiitoh.nc",
+    "productName": "BitClicker",
+    "win": {
+      "icon": "build/icons/win/icon.ico"
+    },
+    "mac": {
+      "icon": "build/icons/mac/icon.icns"
+    },
+    "linux": {
+      "icon": "build/icons/png"
+    }
+  },
+  "dependencies": {
+    "@electron-toolkit/preload": "^3.0.0",
+    "@electron-toolkit/utils": "^3.0.0",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
+    "@mui/icons-material": "^6.2.1",
+    "@mui/material": "^6.2.1",
+    "@nut-tree-fork/nut-js": "^4.2.2",
+    "electron-json-storage": "^4.6.0",
+    "framer-motion": "^11.2.6",
+    "zustand": "^4.5.2"
+  },
+  "devDependencies": {
+    "@electron-toolkit/eslint-config": "^1.0.2",
+    "@electron-toolkit/eslint-config-prettier": "^2.0.0",
+    "@vitejs/plugin-react": "^4.2.1",
+    "electron": "^28.2.0",
+    "electron-builder": "^24.9.1",
+    "electron-icon-maker": "^0.0.5",
+    "electron-rebuild": "^3.2.9",
+    "electron-vite": "^2.0.0",
+    "eslint": "^8.56.0",
+    "eslint-plugin-react": "^7.33.2",
+    "prettier": "^3.2.4",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "tailwindcss": "^3.4.3",
+    "vite": "^5.0.12"
+  }
+}
