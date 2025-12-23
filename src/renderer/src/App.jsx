@@ -198,17 +198,20 @@ function App() {
               <section className="flex flex-col gap-2 mb-8">
                 <FormControl component="fieldset" variant="standard">
                   <FormLabel component="legend">Delay Mode</FormLabel>
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        onChange={() => {
-                          handleSetSetting('interval.type', delayMode == 0 ? 1 : 0)
-                        }}
-                        value={delayMode == 0}
-                      />
-                    }
-                    label={delayMode == 0 ? 'Fixed' : 'Random'}
-                  />
+                  <div className="flex items-center gap-2">
+                    <Typography variant="body2" className={delayMode == 0 ? 'font-semibold' : ''}>
+                      Fixed
+                    </Typography>
+                    <Switch
+                      onChange={() => {
+                        handleSetSetting('interval.type', delayMode == 0 ? 1 : 0)
+                      }}
+                      checked={delayMode == 1}
+                    />
+                    <Typography variant="body2" className={delayMode == 1 ? 'font-semibold' : ''}>
+                      Random
+                    </Typography>
+                  </div>
                 </FormControl>
                 {delayMode == 0 ? (
                   <div className="flex flex-col gap-2">

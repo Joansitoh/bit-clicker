@@ -1,6 +1,6 @@
 {
   "name": "bit-clicker",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Modern and simple auto clicker",
   "main": "./out/main/index.js",
   "author": "joan.programas@gmail.com",
@@ -20,8 +20,29 @@
   "build": {
     "appId": "com.joansiitoh.nc",
     "productName": "BitClicker",
+    "forceCodeSigning": false,
     "win": {
-      "icon": "build/icons/win/icon.ico"
+      "icon": "build/icons/win/icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "artifactName": "${name}-${version}-setup.${ext}"
+    },
+    "portable": {
+      "artifactName": "${name}-${version}-portable.${ext}"
     },
     "mac": {
       "icon": "build/icons/mac/icon.icns"
@@ -46,17 +67,16 @@
     "@electron-toolkit/eslint-config": "^1.0.2",
     "@electron-toolkit/eslint-config-prettier": "^2.0.0",
     "@vitejs/plugin-react": "^4.2.1",
-    "electron": "^28.2.0",
-    "electron-builder": "^24.9.1",
-    "electron-icon-maker": "^0.0.5",
+    "electron": "^39.2.7",
+    "electron-builder": "^26.0.12",
     "electron-rebuild": "^3.2.9",
-    "electron-vite": "^2.0.0",
+    "electron-vite": "^5.0.0",
     "eslint": "^8.56.0",
     "eslint-plugin-react": "^7.33.2",
     "prettier": "^3.2.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "tailwindcss": "^3.4.3",
-    "vite": "^5.0.12"
+    "vite": "^7.3.0"
   }
 }

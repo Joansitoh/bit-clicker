@@ -79,19 +79,46 @@ const startAutoclicker = async (mainWindow) => {
     }
   }
 
-  const type = interval?.type
-  let intervalTime
+  const getIntervalTime = () => {
+    const type = interval?.type
+    if (type == 0) {
+      const fixed = Number(interval?.fixedDelay)
+      return Number.isFinite(fixed) && fixed >= 0 ? fixed : 0
+    }
 
-  if (type == 0) {
-    intervalTime = interval?.fixedDelay
-  } else if (type == 1) {
-    const min = interval?.randomDelayMin
-    const max = interval?.randomDelayMax
-    intervalTime = Math.floor(Math.random() * (max - min + 1)) + min
+    if (type == 1) {
+      let min = Number(interval?.randomDelayMin)
+      let max = Number(interval?.randomDelayMax)
+
+      if (!Number.isFinite(min)) min = 0
+      if (!Number.isFinite(max)) max = 0
+
+      if (min > max) {
+        ;[min, max] = [max, min]
+      }
+
+      min = Math.max(0, min)
+      max = Math.max(0, max)
+
+      return Math.floor(Math.random() * (max - min + 1)) + min
+    }
+
+    return 0
   }
 
-  // Use setInterval to click
-  intervalId = setInterval(click, intervalTime)
+  const scheduleNext = () => {
+    if (!isClicking) return
+    const intervalTime = getIntervalTime()
+    intervalId = setTimeout(async () => {
+      try {
+        await click()
+      } finally {
+        scheduleNext()
+      }
+    }, intervalTime)
+  }
+
+  scheduleNext()
 
   // Notify renderer
   mainWindow.webContents.send('autoclicker-started', true)
@@ -99,7 +126,7 @@ const startAutoclicker = async (mainWindow) => {
 
 const stopAutoclicker = (mainWindow) => {
   if (intervalId) {
-    clearInterval(intervalId)
+    clearTimeout(intervalId)
     intervalId = null // Cleanup
   }
   isClicking = false
