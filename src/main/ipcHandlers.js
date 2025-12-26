@@ -1,189 +1,107 @@
 import { ipcMain, globalShortcut } from 'electron'
-import { mouse, keyboard } from '@nut-tree-fork/nut-js'
-
+import { mouse, keyboard, Button } from '@nut-tree-fork/nut-js'
 import storage from 'electron-json-storage'
 
-let isClicking = false
-let intervalId = null
+const activeProcesses = {
+  click: { isRunning: false, intervalId: null, isHolding: false },
+  hold: { isRunning: false, intervalId: null, isHolding: false },
+  keypress: { isRunning: false, intervalId: null, isHolding: false }
+}
 
-const startAutoclicker = async (mainWindow) => {
-  if (isClicking) return
-  isClicking = true
+const getButton = (type) => {
+  if (type === 1) return Button.RIGHT
+  if (type === 2) return Button.MIDDLE
+  return Button.LEFT
+}
 
-  // Get settings
-  let interval = { type: 0, fixedDelay: 1000, randomDelayMin: 1000, randomDelayMax: 2000 }
-  let clickMode = 0
-  let clickType = 0
-  let keyPress = ''
+const getIntervalTime = (settings) => {
+  if (settings.delayMode === 0) return Math.max(5, settings.fixedDelay)
+  let min = settings.randomDelayMin
+  let max = settings.randomDelayMax
+  if (min > max) [min, max] = [max, min]
+  return Math.floor(Math.random() * (max - min + 1)) + min
+}
 
+const runExecution = async (mode, settings) => {
   try {
-    const data = await new Promise((resolve, reject) => {
-      storage.get('clicker-settings', (error, data) => {
-        if (error || Object.keys(data).length === 0) {
-          resolve({})
-        } else {
-          resolve(data)
-        }
-      })
-    })
-
-    if (data.interval) {
-      interval = data.interval
-    }
-
-    if (data.clickMode) {
-      clickMode = data.clickMode
-    }
-
-    if (data.clickType) {
-      clickType = data.clickType
-    }
-
-    if (data.keyPress) {
-      keyPress = data.keyPress
+    if (mode === 'click') {
+      if (settings.clickType === 0) await mouse.leftClick()
+      else if (settings.clickType === 1) await mouse.rightClick()
+      else await mouse.middleClick()
+    } else if (mode === 'keypress') {
+      if (settings.keyPress) await keyboard.type(settings.keyPress)
     }
   } catch (err) {
-    console.error('Error getting settings from storage:', err)
+    console.error(`Error in mode ${mode}:`, err)
   }
-
-  // Función para realizar un clic
-  const clickMouse = async (clickType) => {
-    switch (clickType) {
-      case 0:
-        await mouse.leftClick()
-        break
-      case 1:
-        await mouse.rightClick()
-        break
-      case 2:
-        await mouse.middleClick()
-        break
-    }
-  }
-
-  const click = async () => {
-    if (!isClicking) return
-    switch (clickMode) {
-      case 0:
-        await clickMouse(clickType)
-        break
-      case 1:
-        if (keyPress) {
-          try {
-            await keyboard.type(keyPress)
-          } catch (err) {
-            console.error('Error pressing key:', err)
-          }
-        }
-        break
-    }
-  }
-
-  const getIntervalTime = () => {
-    const type = interval?.type
-    if (type == 0) {
-      const fixed = Number(interval?.fixedDelay)
-      return Number.isFinite(fixed) && fixed >= 0 ? fixed : 0
-    }
-
-    if (type == 1) {
-      let min = Number(interval?.randomDelayMin)
-      let max = Number(interval?.randomDelayMax)
-
-      if (!Number.isFinite(min)) min = 0
-      if (!Number.isFinite(max)) max = 0
-
-      if (min > max) {
-        ;[min, max] = [max, min]
-      }
-
-      min = Math.max(0, min)
-      max = Math.max(0, max)
-
-      return Math.floor(Math.random() * (max - min + 1)) + min
-    }
-
-    return 0
-  }
-
-  const scheduleNext = () => {
-    if (!isClicking) return
-    const intervalTime = getIntervalTime()
-    intervalId = setTimeout(async () => {
-      try {
-        await click()
-      } finally {
-        scheduleNext()
-      }
-    }, intervalTime)
-  }
-
-  scheduleNext()
-
-  // Notify renderer
-  mainWindow.webContents.send('autoclicker-started', true)
 }
 
-const stopAutoclicker = (mainWindow) => {
-  if (intervalId) {
-    clearTimeout(intervalId)
-    intervalId = null // Cleanup
-  }
-  isClicking = false
+const startMode = async (mainWindow, mode, settings) => {
+  const process = activeProcesses[mode]
+  if (process.isRunning) return
+  process.isRunning = true
 
-  // Notify renderer
-  mainWindow.webContents.send('autoclicker-started', false)
+  if (mode === 'hold') {
+    process.isHolding = true
+    await mouse.pressButton(getButton(settings.clickType))
+  } else {
+    const schedule = async () => {
+      if (!process.isRunning) return
+      await runExecution(mode, settings)
+      process.intervalId = setTimeout(schedule, getIntervalTime(settings))
+    }
+    schedule()
+  }
+  mainWindow.webContents.send('status-changed', { mode, isActive: true })
 }
 
-// Register IPC handlers
-const registerIpcHandlers = (mainWindow) => {
-  ipcMain.handle('load-settings', async () => {
-    return new Promise((resolve, reject) => {
-      storage.get('clicker-settings', (error, data) => {
-        if (error || Object.keys(data).length === 0) {
-          resolve({
-            interval: {
-              type: 0,
-              fixedDelay: 1000,
-              randomDelayMin: 1000,
-              randomDelayMax: 2000
-            },
-            hotkey: 'F6',
-            clickMode: 0,
-            clickType: 0,
-            keyPress: ''
-          }) // Default settings
-        } else {
-          resolve(data)
-        }
+const stopMode = async (mainWindow, mode) => {
+  const process = activeProcesses[mode]
+  process.isRunning = false
+
+  if (process.intervalId) {
+    clearTimeout(process.intervalId)
+    process.intervalId = null
+  }
+
+  if (mode === 'hold' || process.isHolding) {
+    await mouse.releaseButton(Button.LEFT)
+    await mouse.releaseButton(Button.RIGHT)
+    await mouse.releaseButton(Button.MIDDLE)
+    process.isHolding = false
+  }
+  mainWindow.webContents.send('status-changed', { mode, isActive: false })
+}
+
+export const registerIpcHandlers = (mainWindow) => {
+  // Load initial settings
+  ipcMain.handle('load-settings', () => {
+    return new Promise((resolve) => {
+      storage.get('clicker-settings-v2', (err, data) => {
+        resolve(Object.keys(data).length > 0 ? data : null)
       })
     })
   })
 
-  ipcMain.on('save-settings', (event, settings) => {
-    storage.set('clicker-settings', settings, (error) => {
-      if (error) console.error('Error saving settings:', error)
-      else {
-        const hotkey = settings.hotkey
-        if (hotkey) {
-          globalShortcut.unregisterAll()
-          const registered = globalShortcut.register(hotkey, () => {
-            if (isClicking) stopAutoclicker(mainWindow)
-            else startAutoclicker(mainWindow)
-          })
+  // Save and re-register hotkeys
+  ipcMain.on('save-settings', (event, allSettings) => {
+    storage.set('clicker-settings-v2', allSettings)
 
-          if (!registered) {
-            console.error(`Error registering hotkey: ${hotkey}`)
-          }
-        }
+    globalShortcut.unregisterAll()
+
+    Object.entries(allSettings).forEach(([mode, settings]) => {
+      if (settings.hotkey && settings.hotkey !== 'None') {
+        globalShortcut.register(settings.hotkey, () => {
+          if (activeProcesses[mode].isRunning) stopMode(mainWindow, mode)
+          else startMode(mainWindow, mode, settings)
+        })
       }
     })
   })
 
-  mainWindow.on('close', () => {
-    globalShortcut.unregisterAll()
-    stopAutoclicker(mainWindow) // Cleanup
+  // Manual control from UI
+  ipcMain.on('toggle-mode', (event, { mode, settings, active }) => {
+    if (active) startMode(mainWindow, mode, settings)
+    else stopMode(mainWindow, mode)
   })
 }
-
-export { registerIpcHandlers }

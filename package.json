@@ -1,6 +1,6 @@
 {
   "name": "bit-clicker",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Modern and simple auto clicker",
   "main": "./out/main/index.js",
   "author": "joan.programas@gmail.com",
@@ -61,6 +61,7 @@
     "@nut-tree-fork/nut-js": "^4.2.2",
     "electron-json-storage": "^4.6.0",
     "framer-motion": "^11.2.6",
+    "lucide-react": "^0.562.0",
     "zustand": "^4.5.2"
   },
   "devDependencies": {

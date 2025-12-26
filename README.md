@@ -47,6 +47,7 @@
 
 ![BitClicker screenshot 1](/resources/screenshot1.png)
 ![BitClicker screenshot 2](/resources/screenshot2.png)
+![BitClicker screenshot 3](/resources/screenshot3.png)
 
 ---
 
@@ -55,7 +56,9 @@
 <code>► Simple and intuitive interface</code>
 <code>► Configurable click intervals</code>
 <code>► Supports fixed and random delays</code>
-<code>► Hotkey support for starting/stopping the clicker</code>
+<code>► Multiple click modes that can be active simultaneously</code>
+<code>► Custom hotkey for each click mode</code>
+<code>► Portable version available - no installation required</code>
 
 ---
 

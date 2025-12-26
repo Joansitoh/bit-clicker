@@ -1,11 +1,14 @@
 import { contextBridge, ipcRenderer } from 'electron'
 
 contextBridge.exposeInMainWorld('api', {
-  // Functions to interact with the autoclicker
-  onAutoclickerStarted: (callback) =>
-    ipcRenderer.on('autoclicker-started', (_, status) => callback(status)),
+  // Listen for status changes (when activated by Hotkey)
+  onStatusChanged: (callback) => ipcRenderer.on('status-changed', (_, data) => callback(data)),
 
-  // Configuration exposes
+  // Configuration
   loadSettings: () => ipcRenderer.invoke('load-settings'),
-  saveSettings: (settings) => ipcRenderer.send('save-settings', settings)
+  saveSettings: (settings) => ipcRenderer.send('save-settings', settings),
+
+  // Manual control
+  toggleMode: (mode, settings, active) =>
+    ipcRenderer.send('toggle-mode', { mode, settings, active })
 })

@@ -59,7 +59,7 @@ app.on('window-all-closed', () => {
   }
 })
 
-// Limpiar los atajos globales al salir
+// Clean up global shortcuts on quit
 app.on('will-quit', () => {
   globalShortcut.unregisterAll()
 })
